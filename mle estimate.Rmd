@@ -1,0 +1,384 @@
+---
+title: "MLE"
+author: "Faizan Khalid Mohsin"
+date: "June 13, 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+
+
+
+
+
+
+
+I want to change model U9 as:
+am1=0, a0=(m-l)*v, a1=(l-m+(v*p)), a2=-p
+b0=-(m+l)*v ,b1= (m+l-p*v), b2=p , b3=2
+
+```{r}
+require(sde)
+
+ModelU9 <- function( l, m, p, v, r){
+  
+  x0 = 0.001
+  del = 1.825
+
+  sx <- r*sqrt(-(m+l)*v + (m+l-p*v)*x + p*x^2)
+  
+  cm1 <- -(((x - x0)^4*(15*(m+l-p*v)^2*x0^2 - 2*(m+l-p*v)*p*2*(-19 + 4*2)*x0^(1 + 2) + p*2*x0^2*(-8*-(m+l)*v*(-1 + 2) + p*(8 + 7*2)*x0^2)))
+        / (96*x0^2*(-(m+l)*v + (m+l-p*v)*x0 + p*x0^2)^3)) + ((x - x0)^3*(6*(m+l-p*v) + 6*p*2*x0^(-1 + 2)))/(24*(-(m+l)*v + (m+l-p*v)*x0 + p*x0^2)^2)
+        - (x - x0)^2/(2*(-(m+l)*v + (m+l-p*v)*x0 + p*x0^2))
+  c0 <- ((x - x0)*( + 4*(m-l)*v*x0 - (m+l-p*v)*x0 + 4*(l-m+(v*p))*x0^2 + 4*-p*x0^3 - p*2*x0^2))/(4*x0*(-(m+l)*v + (m+l-p*v)*x0 + p*x0^2))
+        + (1/(8*x0^2*(-(m+l)*v + (m+l-p*v)*x0 + p*x0^2)^2))*((x - x0)^2*( + 4*(l-m+(v*p))*-(m+l)*v*x0^2 -
+        4*(m-l)*v*(m+l-p*v)*x0^2 + (m+l-p*v)^2*x0^2 + 8*-p*-(m+l)*v*x0^3 + 4*-p*(m+l-p*v)*x0^4   +
+        -(m+l)*v*p*2*x0^2 - -(m+l)*v*p*2^2*x0^2 + p^2*2*x0^(2*2) - 4*(m-l)*v*p*2*x0^(1 + 2) + 3*(m+l-p*v)*p*2*x0^(1 + 2)
+        - (m+l-p*v)*p*2^2*x0^(1 + 2) + 4*(l-m+(v*p))*p*x0^(2 + 2) - 4*(l-m+(v*p))*p*2*x0^(2 + 2) + 8*-p*p*x0^(3 + 2) - 4*-p*p*2*x0^(3 + 2)))
+  c1 <- (1/8)*(-4*((l-m+(v*p))  + 2*-p*x0) - ((m+l-p*v) + p*2*x0^(-1 + 2))^2/(4*(-(m+l)*v + (m+l-p*v)*x0 + p*x0^2))
+        + (4*((m+l-p*v) + p*2*x0^(-1 + 2))*((m-l)*v  + x0*((l-m+(v*p)) + -p*x0)))/(-(m+l)*v + (m+l-p*v)*x0 + p*x0^2)
+        - (4*((m-l)*v + x0*((l-m+(v*p)) + -p*x0))^2)/(-(m+l)*v + (m+l-p*v)*x0 + p*x0^2) + ((-(m+l-p*v)^2)*x0^2 + 2*(m+l-p*v)*p*(-2 + 2)*2*x0^(1 + 2)
+        + p*2*x0^2*(2*-(m+l)*v*(-1 + 2) + p*(-2 + 2)*x0^2))/(2*x0^2*(-(m+l)*v + (m+l-p*v)*x0 + p*x0^2)))
+  
+  output <- list()
+  output$llk <- -(1/2)*log(2*pi*del) - log(sx) -log(r) + cm1 / del + c0 + c1*del
+  return(output)
+}
+
+```
+
+
+
+
+```{r data}
+
+x=c(2.550000, 2.556978, 2.555238, 2.546246, 2.554293, 2.548191, 2.543376
+ ,2.512683, 2.512003, 2.511226, 2.494605, 2.497290, 2.470577, 2.472870
+ ,2.468031, 2.492904, 2.503194, 2.498228,  2.501416, 2.502226, 2.504898
+ , 2.523088, 2.517207, 2.489609, 2.471484, 2.445203, 2.441277, 2.451573
+ , 2.451163, 2.464991, 2.477224, 2.471008, 2.453828, 2.464066, 2.442697
+ , 2.440131, 2.414516, 2.414634, 2.391581, 2.394754, 2.397257, 2.416568
+ , 2.409498, 2.413578, 2.396886, 2.401736, 2.406750, 2.372373, 2.355601
+ , 2.346278, 2.355340, 2.372853, 2.371235, 2.356366, 2.373168, 2.378655
+ , 2.374885, 2.389336, 2.367859, 2.360458, 2.366510, 2.356086, 2.366827
+ , 2.370002, 2.352056, 2.342448, 2.343482, 2.352952, 2.347672, 2.369125
+ , 2.367388, 2.360993, 2.347585, 2.344202, 2.342949, 2.339776, 2.351571
+ , 2.313410, 2.302416, 2.296548, 2.273563, 2.258683, 2.260291, 2.258629
+ , 2.267077, 2.266332, 2.253751, 2.253037, 2.231469, 2.229201, 2.223852
+ , 2.210181, 2.210930, 2.196252, 2.187240, 2.184619, 2.183636, 2.162923
+ ,2.175120,  2.147308, 2.152381, 2.164339, 2.163029, 2.153708, 2.138566
+ ,2.134458,  2.119280, 2.130953, 2.106827, 2.107677, 2.102637, 2.105440
+ , 2.088646, 2.072742, 2.066041, 2.060340, 2.063539, 2.078275, 2.074636
+ , 2.089418, 2.126384, 2.151757, 2.149325, 2.143306, 2.134750, 2.143759
+ ,2.161948,  2.166629, 2.153740, 2.127698, 2.129058, 2.127690, 2.138490
+ ,2.131603,  2.136097, 2.144553, 2.134279, 2.151632, 2.146351, 2.157278
+ , 2.163830, 2.156273, 2.158032, 2.152248, 2.162078, 2.169097, 2.186204
+ ,2.193722,  2.201828, 2.215230, 2.225457, 2.231650, 2.249455, 2.247857
+ ,2.238788,  2.242648, 2.236800, 2.196761, 2.189324, 2.182450, 2.191325
+ , 2.184324, 2.177956, 2.180737, 2.197525, 2.203205, 2.198755, 2.201773
+ , 2.211844, 2.181051, 2.155609, 2.131034, 2.133368, 2.149703, 2.134658
+ , 2.111583, 2.123350, 2.128581, 2.159470, 2.142906, 2.147017, 2.166409
+ , 2.170332, 2.176495, 2.194041, 2.199854, 2.209623, 2.208232, 2.190589
+ , 2.224905, 2.255171, 2.247777, 2.248011, 2.271762, 2.261944, 2.271410
+ , 2.261770, 2.257891 ,2.264221, 2.231604)
+
+
+```
+
+
+# Run the ModelU9
+
+```{r}
+
+xx <- 0:10
+y <- c(26, 17, 13, 12, 20, 5, 9, 8, 5, 4, 8)
+
+## Easy one-dimensional MLE example:
+nLL <- function(lambda) -sum(stats::dpois(y, lambda, log = TRUE))
+fit0 <- mle(nLL, start = list(lambda = 5), nobs = NROW(y))
+coef(fit0)
+
+
+# Actual values of parameters
+# l <- 0.975
+# m <- 0.975
+# p <- 0.001
+# v <- -8.550
+# r <- 0.05
+
+# Estimate the parameters
+#l <- 1.5
+# m <- 0.2
+# p <- .01
+# v <- -1
+# r <- 0.05
+
+
+# param0 = c(l_0, m_0, p_0, v_0, r_0)
+# 
+# del = 1.825
+# 
+# neg_log_ModelU9 = ModelU9(x, x0 = 0.001 , del , param = param0)
+# 
+# str(neg_log_ModelU9)
+# 
+# # The negative log likelihood output of the function ModelU9 is a vector of length 200
+# 
+# "output length"
+# length(neg_log_ModelU9$llk)
+# 
+# 'output'
+# neg_log_ModelU9$llk
+
+
+```
+
+
+# Get the MLE estimates. 
+
+```{r}
+
+fit = mle(ModelU9, fixed = list(), start = list(l = 1.5, m = 0.2, p = .01, v = -1, r = 0.05),  method="L-BFGS-B", nobs = NROW(x))
+
+
+```
+
+
+
+
+
+# Installing the MLEMVD package. 
+
+```{r}
+install.packages("remotes")
+remotes::install_github("mfrdixon/MLEMVD")
+```
+
+
+```{r}
+library("devtools")
+find_rtools()
+```
+
+
+
+```{r}
+install.packages("remotes")
+remotes::install_github("mfrdixon/MLEMVD")
+```
+
+
+
+# Our MLE Example code
+
+```{r}
+
+library("MLEMVD")
+#library(mfrdixon/MLEMVD)
+l <- 0.975
+m <- 0.975
+p <- 0.001
+v <- -8.550
+r <- 0.05
+
+
+l_0 <- 1.5
+m_0 <- 0.2
+p_0 <- .01
+v_0 <- -1
+r_0 <- 0.05
+
+
+param0 = c(l_0, m_0, p_0, v_0, r_0)
+
+del = 1.825
+
+mle(logdensity = ModelU9, x = x, del = del, param0 = param0)
+
+```
+
+
+
+# Workded out mle Example
+
+Additional code for mle
+
+```{r}
+
+# Online links:
+
+#Online link for example: https://rdrr.io/github/mfrdixon/MLEMVD/src/R/examples/U3.R
+#Online link for main github page: https://rdrr.io/github/mfrdixon/MLEMVD/man/mle.html
+#Online link another github page: https://rdrr.io/github/mfrdixon/MLEMVD/
+#Online link for mlemvd paper: http://past.rinfinance.com/agenda/2017/talk/MatthewDixon.pdf
+#Online presentaion on mle: https://channel9.msdn.com/Events/RFinance/RFinance-2017/MLEMVD-A-R-Package-for-Maximum-Likelihood-Estimation-of-Multivariate-Diffusion-Models
+
+
+
+
+#################### Example on how to use mle() 
+
+#source('R/inc.R')
+
+eps<-1e-3
+args<-list()
+args$plot <- TRUE
+
+
+args$nloptr<-list(maxiter=100,
+                  method = "NLOPT_LD_MMA", #NLOPT_LD_TNEWTON", #"NLOPT_LN_COBYLA",
+                  l = c(eps,eps,0.1+eps,0.5+eps),         #a,b,c,d
+                  u = c(0.5-eps,1.0-eps,1.0-eps,1.1-eps), #a,b,c,d
+                  eval_g_ineq = NULL,
+                  eval_jac_g_ineq = NULL,
+                  check_derivatives = TRUE,
+                  check_derivatives_print="all",
+                  ftol_abs=1e-16,
+                  xtol_rel=1e-16,
+                  ftol_rel=1e-16,
+                  print_level=3)
+
+
+args$DEoptim$maxiter    <- 50
+args$DEoptim$population <- 100
+args$DEoptim$strategy   <- 2
+args$mode <- 'direct'
+##Step 1: Simulating CEV data
+
+a<-0.2
+b<-0.5
+c<-0.9
+d<-0.9
+
+param_0 <-c(a,b,c,d)
+
+
+# daily data: del = 1/252
+del <- 1/252
+
+# read your data here: create a vector x where x(1) = first observations, x(n) = last observations
+# instead, for illustrations purposes, let's just simulate a series from the model
+
+set.seed(11)
+x_0 <- a
+factor <- 10
+n <- 5000
+n.burnin <- 0
+nsimul <- factor*n
+delta <- del/factor
+param <- param_0
+
+exact <- logdensity2loglik(ModelU3,x,del,param_0,args)
+print(paste("Maximum log likelihood is ", exact))
+
+rndn <- rnorm(n.burnin + nsimul)
+xsimul <- rep(nsimul,0)
+xsimul[1] <- x_0
+for (i in 2:nsimul){
+  xsimul[i] <- xsimul[i-1] + b*(a-xsimul[i-1])*delta + c*xsimul[i-1]^d*sqrt(delta)*rndn[n.burnin+i] + 0.5*c^2*d*xsimul[i-1]^(2*d-1)*(rndn[n.burnin+i]*rndn[n.burnin+i]-1)*delta
+}
+x <- rep(n,0)
+
+for (i in 1:n){
+  x[i] <- xsimul[1+(i-1)*factor]
+}
+
+
+summary(ModelU3,x,del,param_0,args)
+
+load('U3.rda')
+## Step 2: optionally change the initial parameter to observe how stable the calibration is when the initial value for the optimization
+## is not the solution parameter
+
+m <- 1 #1000  # number of simulations
+params <-matrix(0,m,length(param_0))
+set.seed(11)
+for (k in 1:m){
+
+  # randomize the initial condition
+  for (j in 1:length(param_0)){
+    param[j]<-runif(1,args$nloptr$l[j], args$nloptr$u[j])
+  }
+  print(i)
+
+  ## Step 3: estimate the MLE parameters
+  output <- mle(ModelU3,x,del,param,args)
+  params[k,] <- output$solution
+}
+## Step 4: compute diagnostic information and plot the log likelihood function
+
+res <- summary(ModelU3,x,del,output$solution,args)
+
+print(res$se)
+print(res$se_robust)
+```
+
+# The actual mle() function source code.
+
+
+```{r mle function}
+
+mle<-function(logdensity,x,del,param0,args=NULL){
+
+
+    if (is.null(args))
+    {
+      print('Error: null arguments passed to function.')
+      return(NULL)
+    }
+
+    #Set the objective function for the negative log likelihood funciton
+    #with a one dimensional argument
+
+    objfun <- function(param){
+      m <- -logdensity2loglik(logdensity,x,del,param,args)$llk
+      return(m)
+    }
+
+    jac <- function(param){
+      jac<- pracma::grad(objfun, param)
+      str<-paste(jac, collapse=" ", sep=",")
+      print(paste("   J = (", str, ")", sep=""))
+      return(jac)
+    }
+    #Perform Differential Evolution to reduce dependency of solution on the initial condition
+
+
+    if (args$DEoptim$maxiter >0){
+      DEres<-DEoptim::DEoptim(fn=objfun, lower=args$nloptr$l, upper=args$nloptr$u,
+                   control=list(NP=args$DEoptim$population, itermax=args$DEoptim$maxiter, strategy=args$DEoptim$strategy))
+      param0<-as.numeric(DEres$optim$bestmem)
+    }
+
+   # minimize the negative log likelihood function
+   # nloptr.print.options()
+   print('NLOPTR')
+   res<- nloptr::nloptr( x0=param0,
+                 eval_f=objfun,
+                 eval_grad_f=jac,
+                 eval_g_ineq=args$nloptr$eval_g_ineq,
+                 eval_jac_g_ineq = args$nloptr$eval_jac_g_ineq,
+                 lb = args$nloptr$l,
+                 ub = args$nloptr$u,
+                 opts = list("algorithm"=args$nloptr$method, "maxeval" = args$nloptr$maxiter, "xtol_rel" = args$nloptr$xtol_rel, "ftol_rel"= args$nloptr$ftol_rel, "ftol_abs"=args$nloptr$ftol_abs, "print_level"=args$nloptr$print_level,"check_derivatives" = args$nloptr$check_derivatives,"check_derivatives_print" = args$nloptr$check_derivatives_print))
+
+
+  #res<-mlsl(x0 = param0,fn = objfun, gr = NULL, lower = args$l, upper = args$u,local.method = "LBFGS", low.discrepancy = TRUE,
+  #      nl.info = TRUE, control = list(ftol_abs=args$ftol_abs, ftol_rel=args$ftol_rel, xtol_rel=args$xtol_rel, maxeval=args$maxiter))
+  #res<-lbfgs(x0 = param0,fn = objfun, gr = NULL, lower = args$l, upper = args$u,
+  #       nl.info = TRUE, control = list(ftol_abs=args$ftol_abs, ftol_rel=args$ftol_rel, xtol_rel=args$xtol_rel, maxeval=args$maxiter))
+
+  return(res)
+}
+
+
+```
+
+
+
